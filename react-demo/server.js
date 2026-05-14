@@ -3,7 +3,7 @@ const fs = require("fs");
 
 const app = express();
 const PORT = 3000;
-const LOG_FILE = "/mnt/data/react-demo.log";
+const LOG_FILE = "/data/react-demo.log";
 const APP_VERSION = "v1.1-logging";
 
 function log(message) {

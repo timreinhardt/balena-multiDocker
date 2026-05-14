@@ -20,7 +20,8 @@ This project currently includes:
 -   Live video stream
 -   Take photo
 -   Display latest saved photo
--   Local persistent logging
+-   Persistent shared logging via `/data`
+-   Shared photo storage
 
 ### Browser:
 
@@ -47,7 +48,7 @@ http://192.168.1.47:5000
 -   Click counter
 -   Demonstrates JavaScript / React deployment
 -   Links to Python webcam dashboard
--   Local persistent logging
+-   Persistent shared logging via `/data`
 
 ### Browser:
 
@@ -75,6 +76,24 @@ Raspberry Pi 4
 │
 └── react-demo
     └── Node / Express / React
+```
+
+------------------------------------------------------------------------
+
+# Shared Persistent Volume
+
+Both services mount:
+
+``` text
+/data
+```
+
+### Shared files:
+
+``` text
+/data/python-flask.log
+/data/react-demo.log
+/data/photo.jpg
 ```
 
 ------------------------------------------------------------------------
@@ -123,6 +142,33 @@ React frontend demo
 
 ------------------------------------------------------------------------
 
+# Docker Compose
+
+``` yaml
+version: "2.1"
+
+services:
+  python-flask:
+    build: .
+    privileged: true
+    ports:
+      - "5000:5000"
+    volumes:
+      - shared-data:/data
+
+  react-demo:
+    build: ./react-demo
+    ports:
+      - "3000:3000"
+    volumes:
+      - shared-data:/data
+
+volumes:
+  shared-data:
+```
+
+------------------------------------------------------------------------
+
 # How to deploy
 
 From this folder on Mac:
@@ -139,19 +185,19 @@ balena push timothy_reinhardt/moonintheman
 ## Python Flask logs:
 
 ``` bash
-tail -f /mnt/data/python-flask.log
+tail -f /data/python-flask.log
 ```
 
 ## React Demo logs:
 
 ``` bash
-tail -f /mnt/data/react-demo.log
+tail -f /data/react-demo.log
 ```
 
 ## Tail BOTH:
 
 ``` bash
-tail -f /mnt/data/python-flask.log /mnt/data/react-demo.log
+tail -f /data/python-flask.log /data/react-demo.log
 ```
 
 ------------------------------------------------------------------------
@@ -176,6 +222,12 @@ lsusb
 ip addr
 ```
 
+## Verify shared storage:
+
+``` bash
+ls /data
+```
+
 ------------------------------------------------------------------------
 
 # Versioning
@@ -183,12 +235,54 @@ ip addr
 ### Current:
 
 ``` text
-v1.1-live-ip
+v1.3-dual-service
 ```
 
 ### Suggested:
 
 ``` text
-v1.2-local-logging
-v1.3-react-demo
+v1.4-shared-volume
+v1.5-camera-fix
+```
+
+------------------------------------------------------------------------
+
+# Interview Talking Point
+
+> Multi-container Raspberry Pi deployment using Balena:
+> Python/Flask/OpenCV backend + React frontend, isolated by service,
+> sharing one Linux kernel and a persistent shared Docker volume.
+
+------------------------------------------------------------------------
+
+# Fast Workflow
+
+## Edit Python:
+
+``` bash
+nano app.py
+```
+
+## Edit React:
+
+``` bash
+nano react-demo/server.js
+```
+
+## Edit Compose:
+
+``` bash
+nano docker-compose.yml
+```
+
+## Push:
+
+``` bash
+balena push timothy_reinhardt/moonintheman
+```
+
+## Debug:
+
+``` bash
+tail -f /data/python-flask.log /data/react-demo.log
 ```

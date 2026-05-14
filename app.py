@@ -11,9 +11,11 @@ camera_on = False
 camera = None
 
 APP_VERSION = "v1.1-logging"
-PHOTO_PATH = "/mnt/data/photo.jpg"
-LOG_FILE = "/mnt/data/python-flask.log"
+LOG_DIR = "/data"
+LOG_FILE = f"{LOG_DIR}/python-flask.log"
+PHOTO_PATH = f"{LOG_DIR}/photo.jpg"
 
+os.makedirs(LOG_DIR, exist_ok=True)
 
 def log(message):
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
