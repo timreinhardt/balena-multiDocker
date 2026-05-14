@@ -3,8 +3,7 @@ FROM balenalib/raspberrypi4-64-debian:bookworm
 WORKDIR /usr/src/app
 
 RUN apt-get update && apt-get install -y \
-    gcc \
-    make \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 COPY Makefile .
