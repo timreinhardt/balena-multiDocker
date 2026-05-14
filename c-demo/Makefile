@@ -30,3 +30,6 @@ run: $(APP)
 
 clean:
 	rm -rf $(BUILD_DIR) $(APP)
+
+test:
+	./test.sh
