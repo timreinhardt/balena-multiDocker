@@ -3,3 +3,7 @@ __pycache__/
 .DS_Store
 node_modules/
 .env
+*.log
+.env
+c-demo/build/
+c-demo/c-demo
