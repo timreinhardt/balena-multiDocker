@@ -1,0 +1,13 @@
+version: "2.1"
+
+services:
+  python-webcam:
+    build: .
+    privileged: true
+    ports:
+      - "5000:5000"
+
+  react-demo:
+    build: ./react-demo
+    ports:
+      - "3000:3000"
