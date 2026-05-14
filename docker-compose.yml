@@ -27,6 +27,8 @@ services:
     build: ./c-demo
     ports:
       - "8080:8080"
-      
+    volumes:
+      - shared-data:/data
+
 volumes:
   shared-data:

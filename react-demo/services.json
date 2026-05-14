@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Python Flask Webcam Dashboard",
+    "port": 5000,
+    "path": "/"
+  },
+  {
+    "name": "React Service Hub",
+    "port": 3000,
+    "path": "/"
+  },
+  {
+    "name": "Express Demo Dashboard",
+    "port": 3001,
+    "path": "/"
+  },
+  {
+    "name": "C Demo Dashboard",
+    "port": 8080,
+    "path": "/"
+  }
+]
