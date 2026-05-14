@@ -14,14 +14,11 @@ This project currently includes:
 
 ### Features:
 
--   Browser dashboard
--   Detect USB webcam
--   Start / Stop live camera
--   Live video stream
--   Take photo
--   Display latest saved photo
--   Persistent shared logging via `/data`
--   Shared photo storage
+- Browser dashboard
+- USB webcam detection
+- Live video + camera control
+- Photo capture + latest image
+- Shared `/data` logging + storage
 
 ### Browser:
 
@@ -43,12 +40,10 @@ http://192.168.1.47:5000
 
 ### Features:
 
--   React frontend demo
--   Live browser clock
--   Click counter
--   Demonstrates JavaScript / React deployment
--   Links to Python webcam dashboard
--   Persistent shared logging via `/data`
+- React dashboard demo
+- Live clock + click counter
+- Python dashboard link
+- Shared `/data` logging
 
 ### Browser:
 
@@ -180,7 +175,7 @@ balena push timothy_reinhardt/moonintheman
 
 ------------------------------------------------------------------------
 
-# How to debug quickly
+# How to debug 
 
 ## Python Flask logs:
 
@@ -230,50 +225,15 @@ ls /data
 
 ------------------------------------------------------------------------
 
-# Versioning
 
-### Current:
-
-``` text
-v1.3-dual-service
-```
-
-### Suggested:
-
-``` text
-v1.4-shared-volume
-v1.5-camera-fix
-```
-
-------------------------------------------------------------------------
-
-# Interview Talking Point
-
-> Multi-container Raspberry Pi deployment using Balena:
-> Python/Flask/OpenCV backend + React frontend, isolated by service,
-> sharing one Linux kernel and a persistent shared Docker volume.
-
-------------------------------------------------------------------------
 
 # Fast Workflow
 
-## Edit Python:
-
 ``` bash
-nano app.py
+balena login
 ```
+## edit
 
-## Edit React:
-
-``` bash
-nano react-demo/server.js
-```
-
-## Edit Compose:
-
-``` bash
-nano docker-compose.yml
-```
 
 ## Push:
 
@@ -281,8 +241,3 @@ nano docker-compose.yml
 balena push timothy_reinhardt/moonintheman
 ```
 
-## Debug:
-
-``` bash
-tail -f /data/python-flask.log /data/react-demo.log
-```
