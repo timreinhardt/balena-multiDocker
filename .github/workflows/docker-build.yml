@@ -1,33 +1,265 @@
+# =========================================================
+# GitHub Actions Workflow: Docker Build Check
+# Purpose:
+# Automatically validate Docker builds for each service,
+# BUT only rebuild services whose relevant subtree changed.
+#
+# Benefits:
+# - Faster CI
+# - Avoid rebuilding everything unnecessarily
+# - ARM64 / Raspberry Pi compatible
+# - Uses Docker layer cache for speed
+# =========================================================
+
 name: Docker Build Check
 
+# =========================================================
+# TRIGGERS
+# Run this workflow when:
+# 1. Code is pushed to main branch
+# 2. Any pull request is opened/updated
+# =========================================================
 on:
   push:
     branches:
       - main
   pull_request:
 
+# =========================================================
+# JOBS
+# A workflow can contain multiple jobs.
+# This one job focuses on Docker validation.
+# =========================================================
 jobs:
   docker-build:
+
+    # -----------------------------------------------------
+    # GitHub creates a temporary Ubuntu virtual machine
+    # to execute all steps below.
+    # -----------------------------------------------------
     runs-on: ubuntu-latest
 
+    # =====================================================
+    # STEPS
+    # Executed top to bottom
+    # =====================================================
     steps:
+
+      # ---------------------------------------------------
+      # STEP 1: CHECKOUT REPOSITORY
+      # Downloads your GitHub repo into the runner.
+      # Equivalent to:
+      # git clone <repo>
+      # ---------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ---------------------------------------------------
+      # STEP 2: DETECT WHAT CHANGED
+      #
+      # This checks which folders/files changed in this push
+      # or PR, and creates true/false outputs:
+      #
+      # steps.changes.outputs.react
+      # steps.changes.outputs.express
+      # etc.
+      #
+      # This is the key optimization:
+      # If react-demo did not change,
+      # React image is skipped.
+      # ---------------------------------------------------
+      - name: Detect changed paths
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+
+            # Root-level Flask app files
+            root:
+              - 'Dockerfile'
+              - 'docker-compose.yml'
+              - 'app.py'
+              - 'requirements.txt'
+
+            # React frontend subtree
+            react:
+              - 'react-demo/**'
+
+            # Express / Node backend subtree
+            express:
+              - 'express-demo/**'
+
+            # C application subtree
+            cdemo:
+              - 'c-demo/**'
+
+            # Instrumentation / SCPI / VISA subtree
+            instrumentation:
+              - 'instrument-control/**'
+
+      # ---------------------------------------------------
+      # STEP 3: SET UP QEMU
+      #
+      # GitHub runner is x86,
+      # but Raspberry Pi target is ARM64.
+      #
+      # QEMU emulates ARM so ARM Docker builds work.
+      # ---------------------------------------------------
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
+      # ---------------------------------------------------
+      # STEP 4: SET UP DOCKER BUILDX
+      #
+      # Buildx = advanced Docker builder
+      # Needed for:
+      # - Multi-platform builds
+      # - ARM64 builds
+      # - Better caching
+      # ---------------------------------------------------
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # ===================================================
+      # ROOT PYTHON / FLASK BUILD
+      # Only runs if root files changed
+      # ===================================================
       - name: Build Python Flask image
-        run: docker buildx build --platform linux/arm64 -t python-flask-test .
 
+        # Skip unless root files changed
+        if: steps.changes.outputs.root == 'true'
+
+        # Official Docker GitHub Action
+        uses: docker/build-push-action@v6
+
+        with:
+          # Build context:
+          # Use repo root folder
+          context: .
+
+          # Target architecture:
+          # Raspberry Pi / ARM64
+          platforms: linux/arm64
+
+          # Temporary image name
+          tags: python-flask-test
+
+          # Build only, do NOT publish
+          push: false
+
+          # Load previous cached Docker layers
+          cache-from: type=gha
+
+          # Save new cache layers for future runs
+          cache-to: type=gha,mode=max
+
+      # ===================================================
+      # REACT DEMO BUILD
+      # Only if react-demo subtree changed
+      # ===================================================
       - name: Build React demo image
-        run: docker buildx build --platform linux/arm64 -t react-demo-test ./react-demo
+        if: steps.changes.outputs.react == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          # Build from react-demo folder
+          context: ./react-demo
 
+          # ARM64 target
+          platforms: linux/arm64
+
+          # Temporary image tag
+          tags: react-demo-test
+
+          # Do not upload anywhere
+          push: false
+
+          # Reuse cached layers
+          cache-from: type=gha
+
+          # Save cache
+          cache-to: type=gha,mode=max
+
+      # ===================================================
+      # EXPRESS DEMO BUILD
+      # Only if express-demo subtree changed
+      # ===================================================
       - name: Build Express demo image
-        run: docker buildx build --platform linux/arm64 -t express-demo-test ./express-demo
+        if: steps.changes.outputs.express == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          # Build from express-demo folder
+          context: ./express-demo
 
+          # Raspberry Pi compatible
+          platforms: linux/arm64
+
+          # Temporary build tag
+          tags: express-demo-test
+
+          # Validate only
+          push: false
+
+          # Cache previous layers
+          cache-from: type=gha
+
+          # Update cache
+          cache-to: type=gha,mode=max
+
+      # ===================================================
+      # C DEMO BUILD
+      # Only if c-demo subtree changed
+      # ===================================================
       - name: Build C demo image
-        run: docker buildx build --platform linux/arm64 -t c-demo-test ./c-demo
+        if: steps.changes.outputs.cdemo == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          # Build from c-demo folder
+          context: ./c-demo
+
+          # ARM64 architecture
+          platforms: linux/arm64
+
+          # Temporary image tag
+          tags: c-demo-test
+
+          # No registry push
+          push: false
+
+          # Load cache
+          cache-from: type=gha
+
+          # Save cache
+          cache-to: type=gha,mode=max
+
+      # ===================================================
+      # INSTRUMENTATION CONTROL BUILD
+      # Includes:
+      # - SCPI
+      # - VISA
+      # - Serial / COM
+      # - USB
+      # - Ethernet sockets
+      #
+      # Only if instrument-control subtree changed
+      # ===================================================
+      - name: Build Instrumentation Control image
+        if: steps.changes.outputs.instrumentation == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          # Build from instrumentation folder
+          context: ./instrument-control
+
+          # Raspberry Pi target
+          platforms: linux/arm64
+
+          # Temporary image tag
+          tags: instrument-control-test
+
+          # Build but do not deploy
+          push: false
+
+          # Reuse cache
+          cache-from: type=gha
+
+          # Save updated cache
+          cache-to: type=gha,mode=max
