@@ -1,243 +1,134 @@
-# MoonInTheMan Balena Raspberry Pi Multi-Service Dashboard
+# MoonInTheMan — Balena Raspberry Pi Multi-Service Lab
 
-## What this project does
+Multi-container Raspberry Pi 4 project using Balena for embedded Linux, web dashboards, C/Node/Python demos, and CI.
 
-Runs a **multi-service Balena deployment** on a Raspberry Pi 4.
+---
 
-This project currently includes:
+## Current Services
 
-------------------------------------------------------------------------
+### `python-flask` — Python / Flask / OpenCV
+- USB webcam dashboard
+- Live video + photo capture
+- `/data` shared logging
 
-# Service 1: `python-flask`
+**Browser:** `http://<PI-IP>:5000`
 
-## Python + Flask + OpenCV webcam dashboard
+---
 
-### Features:
-
-- Browser dashboard
-- USB webcam detection
-- Live video + camera control
-- Photo capture + latest image
-- Shared `/data` logging + storage
-
-### Browser:
-
-``` text
-http://<PI-IP>:5000
-```
-
-### Example:
-
-``` text
-http://192.168.1.47:5000
-```
-
-------------------------------------------------------------------------
-
-# Service 2: `react-demo`
-
-## Node + Express + React dashboard
-
-### Features:
-
-- React dashboard demo
+### `react-demo` — Node / Express / React
+- Service hub dashboard
 - Live clock + click counter
-- Python dashboard link
-- Shared `/data` logging
+- Central service links
+- `/data` logging
 
-### Browser:
+**Browser:** `http://<PI-IP>:3000`
 
-``` text
-http://<PI-IP>:3000
-```
+---
 
-### Example:
+### `express-demo` — Node / Express
+- Beginner GET/POST demo
+- Simple state control
 
-``` text
-http://192.168.1.47:3000
-```
+**Browser:** `http://<PI-IP>:3001`
 
-------------------------------------------------------------------------
+---
 
-# Architecture
+### `c-demo` — Raw C Socket Server + API
+- HTML dashboard
+- GET `/status`
+- POST `/toggle` `/count` `/reset`
+- `/data/c-demo.log`
 
-``` text
-Raspberry Pi 4
-│
-├── Host OS (BalenaOS)
-│
+**Browser:** `http://<PI-IP>:8080`
+
+---
+
+## Architecture
+
+```text
+BalenaOS
 ├── python-flask
-│   └── Python / Flask / OpenCV
-│
-└── react-demo
-    └── Node / Express / React
+├── react-demo
+├── express-demo
+└── c-demo
 ```
 
-------------------------------------------------------------------------
+---
 
-# Shared Persistent Volume
+## Shared Volume
 
-Both services mount:
-
-``` text
+```text
 /data
 ```
 
-### Shared files:
+Examples:
 
-``` text
+```text
 /data/python-flask.log
 /data/react-demo.log
+/data/c-demo.log
 /data/photo.jpg
 ```
 
-------------------------------------------------------------------------
+---
 
-# Folder Structure
+## Deploy
 
-``` text
-balena-hello/
-│
-├── Dockerfile
-├── docker-compose.yml
-├── app.py
-├── README.md
-│
-└── react-demo/
-    ├── Dockerfile
-    ├── package.json
-    └── server.js
-```
-
-------------------------------------------------------------------------
-
-# Docker Images
-
-## Root Dockerfile:
-
-``` dockerfile
-FROM balenalib/raspberrypi4-64-python:3.11
-```
-
-### Purpose:
-
-Python webcam + Flask backend
-
-------------------------------------------------------------------------
-
-## React Dockerfile:
-
-``` dockerfile
-FROM balenalib/raspberrypi4-64-node:20
-```
-
-### Purpose:
-
-React frontend demo
-
-------------------------------------------------------------------------
-
-# Docker Compose
-
-``` yaml
-version: "2.1"
-
-services:
-  python-flask:
-    build: .
-    privileged: true
-    ports:
-      - "5000:5000"
-    volumes:
-      - shared-data:/data
-
-  react-demo:
-    build: ./react-demo
-    ports:
-      - "3000:3000"
-    volumes:
-      - shared-data:/data
-
-volumes:
-  shared-data:
-```
-
-------------------------------------------------------------------------
-
-# How to deploy
-
-From this folder on Mac:
-
-``` bash
-cd ~/balena-hello
+```bash
+balena login
 balena push timothy_reinhardt/moonintheman
 ```
 
-------------------------------------------------------------------------
+---
 
-# How to debug 
+## Debug
 
-## Python Flask logs:
-
-``` bash
+```bash
 tail -f /data/python-flask.log
-```
-
-## React Demo logs:
-
-``` bash
 tail -f /data/react-demo.log
+tail -f /data/c-demo.log
 ```
 
-## Tail BOTH:
+All:
 
-``` bash
-tail -f /data/python-flask.log /data/react-demo.log
+```bash
+tail -f /data/*.log
 ```
 
-------------------------------------------------------------------------
+---
 
-# Useful Host OS commands
+## GitHub CI
 
-## Check camera devices:
+GitHub Actions automatically checks Docker builds on push:
 
-``` bash
+```text
+GitHub → Actions → Docker Build Check
+```
+
+Current CI:
+- Python image build
+- React image build
+- Express image build
+- C image build
+
+---
+
+## Useful Commands
+
+```bash
 ls /dev/video*
-```
-
-## Check USB devices:
-
-``` bash
 lsusb
-```
-
-## Check IP:
-
-``` bash
 ip addr
-```
-
-## Verify shared storage:
-
-``` bash
 ls /data
 ```
 
-------------------------------------------------------------------------
+---
 
+## Fast Workflow
 
-
-# Fast Workflow
-
-``` bash
-balena login
-```
-## edit
-
-
-## Push:
-
-``` bash
+```bash
+git add .
+git commit -m "Update"
+git push
 balena push timothy_reinhardt/moonintheman
 ```
-

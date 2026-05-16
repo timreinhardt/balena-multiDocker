@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Balena Instrument Control</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; background: #f4f4f4; }
+    section { background: white; padding: 18px; margin-bottom: 18px; border-radius: 8px; }
+    input, button { padding: 8px; margin: 4px; }
+    pre { background: #111; color: #0f0; padding: 12px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>Balena Instrument Control Demo</h1>
+  <p>Focus: Ethernet sockets, COM/serial ports, VISA and SCPI.</p>
+
+  <section>
+    <h2>Ethernet SCPI</h2>
+    <input id="ethHost" placeholder="Instrument IP, e.g. 192.168.1.50">
+    <input id="ethPort" value="5025">
+    <input id="ethCmd" value="*IDN?">
+    <button onclick="ethernetQuery()">Send</button>
+  </section>
+
+  <section>
+    <h2>Serial / COM Port</h2>
+    <input id="serPort" value="/dev/ttyUSB0">
+    <input id="baud" value="9600">
+    <input id="serCmd" value="*IDN?">
+    <button onclick="serialQuery()">Send</button>
+  </section>
+
+  <section>
+    <h2>VISA</h2>
+    <button onclick="listVisa()">List VISA Resources</button><br>
+    <input id="visaResource" size="55" placeholder="TCPIP::192.168.1.50::5025::SOCKET">
+    <input id="visaCmd" value="*IDN?">
+    <button onclick="visaQuery()">Send</button>
+  </section>
+
+  <h2>Response</h2>
+  <pre id="output">Ready.</pre>
+
+<script>
+async function postJson(url, body) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+}
+
+function ethernetQuery() {
+  postJson("/api/ethernet-scpi/query", {
+    host: document.getElementById("ethHost").value,
+    port: Number(document.getElementById("ethPort").value),
+    command: document.getElementById("ethCmd").value
+  });
+}
+
+function serialQuery() {
+  postJson("/api/serial/query", {
+    port: document.getElementById("serPort").value,
+    baudrate: Number(document.getElementById("baud").value),
+    command: document.getElementById("serCmd").value
+  });
+}
+
+async function listVisa() {
+  const res = await fetch("/api/visa/resources");
+  const data = await res.json();
+  document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+}
+
+function visaQuery() {
+  postJson("/api/visa/query", {
+    resource: document.getElementById("visaResource").value,
+    command: document.getElementById("visaCmd").value
+  });
+}
+</script>
+</body>
+</html>
