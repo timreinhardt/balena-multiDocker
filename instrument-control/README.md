@@ -10,9 +10,20 @@ It focuses on:
 - SCPI
 - USB-connected instruments
 
-This is not meant to imitate Windows visually.  
-It is meant to demonstrate the same engineering layers used in Windows PC instrumentation applications.
+## Virtual Instrumentation Software Architecture 
 
+
+```text
+Browser UI
+  ↓
+FastAPI application logic
+  ↓
+Protocol layer
+  ↓
+Ethernet / Serial / VISA / USB
+  ↓
+SCPI-capable instrument
+```
 ## Run locally
 
 ```bash
@@ -25,13 +36,6 @@ Open:
 http://localhost:8080
 ```
 
-## Deploy to Balena
-
-Copy this folder into a Balena repo and push:
-
-```bash
-balena push <your-fleet-name>
-```
 
 ## Common SCPI command
 
@@ -67,7 +71,7 @@ COM3
 COM4
 ```
 
-## VISA examples
+## Virtual Instrumentation Software Architecture examples
 
 ```text
 TCPIP::192.168.1.50::5025::SOCKET
@@ -75,18 +79,5 @@ ASRL/dev/ttyUSB0::INSTR
 USB0::0x1234::0x5678::SERIAL::INSTR
 ```
 
-## Interview talking point
 
-This project demonstrates a layered test-and-measurement control application:
 
-```text
-Browser UI
-  ↓
-FastAPI application logic
-  ↓
-Protocol layer
-  ↓
-Ethernet / Serial / VISA / USB
-  ↓
-SCPI-capable instrument
-```
