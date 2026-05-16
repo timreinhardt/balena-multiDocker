@@ -18,5 +18,11 @@
     "name": "C Demo Dashboard",
     "port": 8080,
     "path": "/"
+  },
+  {
+    "name": "Instrument Control Demo",
+    "port": 8081,
+    "path": "/"
   }
+
 ]

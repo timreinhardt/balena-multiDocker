@@ -242,7 +242,7 @@ jobs:
       # Only if instrument-control subtree changed
       # ===================================================
       - name: Build Instrumentation Control image
-        f: steps.changes.outputs.instrumentation == 'true' || steps.changes.outputs.compose == 'true'
+        if: steps.changes.outputs.instrumentation == 'true' || steps.changes.outputs.compose == 'true'
         uses: docker/build-push-action@v6
         with:
           # Build from instrumentation folder
