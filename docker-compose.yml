@@ -1,14 +1,14 @@
 version: "2.1"
 
 services:
-  python-flask:
-    build: .
+  python-flask-demo:
+    build: ./python-flask-demo
     privileged: true
+    restart: always
     ports:
       - "5000:5000"
-    volumes:
-      - shared-data:/data
-
+    devices:
+      - "/dev/video0:/dev/video0"
   react-demo:
     build: ./react-demo
     ports:
@@ -30,5 +30,14 @@ services:
     volumes:
       - shared-data:/data
 
+  instrument-control:
+    build: ./instrument-control
+    privileged: true
+    restart: always
+    ports:
+      - "8081:8080"
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "/dev/ttyACM0:/dev/ttyACM0"
 volumes:
   shared-data:

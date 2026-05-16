@@ -127,15 +127,14 @@ jobs:
       - name: Build Python Flask image
 
         # Skip unless root files changed
-        if: steps.changes.outputs.root == 'true'
-
+        if: steps.changes.outputs.flask == 'true' || steps.changes.outputs.compose == 'true'
         # Official Docker GitHub Action
         uses: docker/build-push-action@v6
 
         with:
           # Build context:
           # Use repo root folder
-          context: .
+          context: ./python-flask-demo
 
           # Target architecture:
           # Raspberry Pi / ARM64
@@ -158,7 +157,7 @@ jobs:
       # Only if react-demo subtree changed
       # ===================================================
       - name: Build React demo image
-        if: steps.changes.outputs.react == 'true'
+        if: steps.changes.outputs.react == 'true' || steps.changes.outputs.compose == 'true'
         uses: docker/build-push-action@v6
         with:
           # Build from react-demo folder
@@ -184,7 +183,7 @@ jobs:
       # Only if express-demo subtree changed
       # ===================================================
       - name: Build Express demo image
-        if: steps.changes.outputs.express == 'true'
+        if: steps.changes.outputs.express == 'true' || steps.changes.outputs.compose == 'true'
         uses: docker/build-push-action@v6
         with:
           # Build from express-demo folder
@@ -210,7 +209,7 @@ jobs:
       # Only if c-demo subtree changed
       # ===================================================
       - name: Build C demo image
-        if: steps.changes.outputs.cdemo == 'true'
+        if: steps.changes.outputs.cdemo == 'true' || steps.changes.outputs.compose == 'true'
         uses: docker/build-push-action@v6
         with:
           # Build from c-demo folder
@@ -243,7 +242,7 @@ jobs:
       # Only if instrument-control subtree changed
       # ===================================================
       - name: Build Instrumentation Control image
-        if: steps.changes.outputs.instrumentation == 'true'
+        f: steps.changes.outputs.instrumentation == 'true' || steps.changes.outputs.compose == 'true'
         uses: docker/build-push-action@v6
         with:
           # Build from instrumentation folder
