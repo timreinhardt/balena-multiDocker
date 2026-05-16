@@ -2,38 +2,142 @@
 <html>
 <head>
   <title>Instrument Control</title>
+
   <style>
-    body { font-family: Arial, sans-serif; margin: 30px; background: #f4f4f4; }
-    section { background: white; padding: 18px; margin-bottom: 18px; border-radius: 8px; }
-    input, button { padding: 8px; margin: 4px; }
-    pre { background: #111; color: #0f0; padding: 12px; overflow-x: auto; }
+    /* Basic page styling */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      background: #f4f4f4;
+    }
+
+    /* Each white card/section */
+    section {
+      background: white;
+      padding: 18px;
+      margin-bottom: 18px;
+      border-radius: 8px;
+    }
+
+    /* Field wrapper so label + input stay together */
+    .field {
+      display: inline-block;
+      vertical-align: top;
+      margin: 6px 10px 6px 0;
+    }
+
+    /* Field heading above each text box */
+    label {
+      display: block;
+      font-weight: bold;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    /* Small hint below each text box */
+    small {
+      display: block;
+      color: #666;
+      font-size: 11px;
+      margin-top: 3px;
+    }
+
+    input, button {
+      padding: 8px;
+      margin: 4px 0;
+    }
+
+    input {
+      min-width: 180px;
+    }
+
+    .wide-input {
+      min-width: 360px;
+    }
+
+    /* Response/output terminal style box */
+    pre {
+      background: #111;
+      color: #0f0;
+      padding: 12px;
+      overflow-x: auto;
+    }
   </style>
 </head>
+
 <body>
-  <h1>Balena Instrument Control Demo</h1>
+  <h1>Instrument Control Demo</h1>
   <p>Focus: Ethernet sockets, COM/serial ports, VISA and SCPI.</p>
 
+  <!-- Ethernet SCPI sends commands over a TCP/IP socket, commonly port 5025 -->
   <section>
     <h2>Ethernet SCPI</h2>
-    <input id="ethHost" placeholder="Instrument IP, e.g. 192.168.1.50">
-    <input id="ethPort" value="5025">
-    <input id="ethCmd" value="*IDN?">
+
+    <div class="field">
+      <label for="ethHost">Instrument IP / Hostname</label>
+      <input id="ethHost" placeholder="scpi-sim or 192.168.1.50">
+      <small>Use <b>scpi-sim</b> for Docker simulator</small>
+    </div>
+
+    <div class="field">
+      <label for="ethPort">Port</label>
+      <input id="ethPort" value="5025">
+      <small>SCPI-over-TCP commonly uses 5025</small>
+    </div>
+
+    <div class="field">
+      <label for="ethCmd">SCPI Command</label>
+      <input id="ethCmd" value="*IDN?">
+      <small><b>*IDN?</b> asks instrument to identify itself</small>
+    </div>
+
     <button onclick="ethernetQuery()">Send</button>
   </section>
 
+  <!-- Serial / COM sends commands over Linux serial devices like /dev/ttyUSB0 -->
   <section>
     <h2>Serial / COM Port</h2>
-    <input id="serPort" value="/dev/ttyUSB0">
-    <input id="baud" value="9600">
-    <input id="serCmd" value="*IDN?">
+
+    <div class="field">
+      <label for="serPort">Device Path</label>
+      <input id="serPort" value="/dev/ttyUSB0">
+      <small>Linux equivalent of Windows COM port</small>
+    </div>
+
+    <div class="field">
+      <label for="baud">Baud Rate</label>
+      <input id="baud" value="9600">
+      <small>Common values: 9600, 19200, 115200</small>
+    </div>
+
+    <div class="field">
+      <label for="serCmd">Command</label>
+      <input id="serCmd" value="*IDN?">
+      <small>Depends on the connected serial device</small>
+    </div>
+
     <button onclick="serialQuery()">Send</button>
   </section>
 
+  <!-- VISA is an abstraction layer for lab instruments over TCP/IP, USB, serial, etc. -->
   <section>
     <h2>VISA</h2>
-    <button onclick="listVisa()">List VISA Resources</button><br>
-    <input id="visaResource" size="55" placeholder="TCPIP::192.168.1.50::5025::SOCKET">
-    <input id="visaCmd" value="*IDN?">
+
+    <button onclick="listVisa()">List VISA Resources</button>
+    <br><br>
+
+    <div class="field">
+      <label for="visaResource">VISA Resource String</label>
+      <input id="visaResource" class="wide-input" placeholder="TCPIP::scpi-sim::5025::SOCKET">
+      <small>Example: TCPIP::scpi-sim::5025::SOCKET</small>
+    </div>
+
+    <div class="field">
+      <label for="visaCmd">SCPI Command</label>
+      <input id="visaCmd" value="*IDN?">
+      <small>Try *IDN? first</small>
+    </div>
+
     <button onclick="visaQuery()">Send</button>
   </section>
 
@@ -41,16 +145,31 @@
   <pre id="output">Ready.</pre>
 
 <script>
+/*
+  Helper function:
+  Sends JSON to a backend FastAPI endpoint,
+  receives JSON back,
+  then prints response into the black output box.
+*/
 async function postJson(url, body) {
   const res = await fetch(url, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify(body)
   });
+
   const data = await res.json();
   document.getElementById("output").textContent = JSON.stringify(data, null, 2);
 }
 
+/*
+  Ethernet SCPI query:
+  Uses host + port + command fields.
+  Example:
+    host = scpi-sim
+    port = 5025
+    command = *IDN?
+*/
 function ethernetQuery() {
   postJson("/api/ethernet-scpi/query", {
     host: document.getElementById("ethHost").value,
@@ -59,6 +178,14 @@ function ethernetQuery() {
   });
 }
 
+/*
+  Serial query:
+  Uses Linux device path, baud rate, and command.
+  Example:
+    port = /dev/ttyUSB0
+    baudrate = 9600
+    command = *IDN?
+*/
 function serialQuery() {
   postJson("/api/serial/query", {
     port: document.getElementById("serPort").value,
@@ -67,12 +194,23 @@ function serialQuery() {
   });
 }
 
+/*
+  VISA resource listing:
+  Asks backend to scan visible VISA resources.
+*/
 async function listVisa() {
   const res = await fetch("/api/visa/resources");
   const data = await res.json();
   document.getElementById("output").textContent = JSON.stringify(data, null, 2);
 }
 
+/*
+  VISA query:
+  Uses VISA resource string and command.
+  Example:
+    resource = TCPIP::scpi-sim::5025::SOCKET
+    command = *IDN?
+*/
 function visaQuery() {
   postJson("/api/visa/query", {
     resource: document.getElementById("visaResource").value,

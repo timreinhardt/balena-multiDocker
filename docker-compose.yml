@@ -40,12 +40,11 @@ services:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
       - "/dev/ttyACM0:/dev/ttyACM0"
 
-
-    scpi-sim:
-      build: ./scpi-sim
-      restart: always
-      ports:
-        - "5025:5025"
+  scpi-sim:
+    build: ./scpi-sim
+    restart: always
+    ports:
+      - "5025:5025"
         
 volumes:
   shared-data:
