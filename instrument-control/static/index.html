@@ -4,14 +4,14 @@
   <title>Instrument Control</title>
 
   <style>
-    /* Basic page styling */
+    /* Page layout */
     body {
       font-family: Arial, sans-serif;
       margin: 30px;
       background: #f4f4f4;
     }
 
-    /* Each white card/section */
+    /* White card sections */
     section {
       background: white;
       padding: 18px;
@@ -19,14 +19,14 @@
       border-radius: 8px;
     }
 
-    /* Field wrapper so label + input stay together */
+    /* Keeps label, input and hint together */
     .field {
       display: inline-block;
       vertical-align: top;
       margin: 6px 10px 6px 0;
     }
 
-    /* Field heading above each text box */
+    /* Input headings */
     label {
       display: block;
       font-weight: bold;
@@ -34,7 +34,7 @@
       margin-bottom: 4px;
     }
 
-    /* Small hint below each text box */
+    /* Small help text */
     small {
       display: block;
       color: #666;
@@ -42,40 +42,47 @@
       margin-top: 3px;
     }
 
-    input, button {
+    input, select, button {
       padding: 8px;
       margin: 4px 0;
-    }
-
-    input {
       min-width: 180px;
     }
 
-    .wide-input {
-      min-width: 360px;
+    button {
+      min-width: auto;
+      cursor: pointer;
     }
 
-    /* Response/output terminal style box */
+    .wide-input {
+      min-width: 380px;
+    }
+
+    .command-input {
+      min-width: 240px;
+    }
+
+    /* Response terminal */
     pre {
       background: #111;
       color: #0f0;
       padding: 12px;
       overflow-x: auto;
+      white-space: pre-wrap;
     }
   </style>
 </head>
 
 <body>
-  <h1>Instrument Control Demo</h1>
+  <h1>Balena Instrument Control Demo</h1>
   <p>Focus: Ethernet sockets, COM/serial ports, VISA and SCPI.</p>
 
-  <!-- Ethernet SCPI sends commands over a TCP/IP socket, commonly port 5025 -->
+  <!-- Ethernet SCPI: sends SCPI commands over TCP/IP socket -->
   <section>
     <h2>Ethernet SCPI</h2>
 
     <div class="field">
       <label for="ethHost">Instrument IP / Hostname</label>
-      <input id="ethHost" placeholder="scpi-sim or 192.168.1.50">
+      <input id="ethHost" value="scpi-sim" placeholder="scpi-sim or 192.168.1.50">
       <small>Use <b>scpi-sim</b> for Docker simulator</small>
     </div>
 
@@ -86,15 +93,33 @@
     </div>
 
     <div class="field">
-      <label for="ethCmd">SCPI Command</label>
-      <input id="ethCmd" value="*IDN?">
-      <small><b>*IDN?</b> asks instrument to identify itself</small>
+      <label for="ethCmdSelect">SCPI Command</label>
+      <select id="ethCmdSelect" onchange="syncCommand('eth')">
+        <option value="*IDN?">*IDN? — identify instrument</option>
+        <option value=":MEAS:VOLT?">:MEAS:VOLT? — read voltage</option>
+        <option value=":MEAS:CURR?">:MEAS:CURR? — read current</option>
+        <option value=":FREQ:CENT?">:FREQ:CENT? — get centre frequency</option>
+        <option value=":FREQ:CENT 1000000000">:FREQ:CENT 1000000000 — set centre frequency</option>
+        <option value=":FREQ:SPAN?">:FREQ:SPAN? — get span</option>
+        <option value=":FREQ:SPAN 50000000">:FREQ:SPAN 50000000 — set span</option>
+        <option value=":INIT">:INIT — start sweep/acquisition</option>
+        <option value=":TRAC:DATA?">:TRAC:DATA? — get fake trace data</option>
+        <option value=":SYST:ERR?">:SYST:ERR? — read error queue</option>
+        <option value="TEXT">TEXT — type custom command</option>
+      </select>
+      <small>Select known command or choose TEXT</small>
+    </div>
+
+    <div class="field">
+      <label for="ethCmd">Command Text</label>
+      <input id="ethCmd" class="command-input" value="*IDN?">
+      <small>Edit when dropdown is TEXT/custom</small>
     </div>
 
     <button onclick="ethernetQuery()">Send</button>
   </section>
 
-  <!-- Serial / COM sends commands over Linux serial devices like /dev/ttyUSB0 -->
+  <!-- Serial / COM: sends commands over Linux serial device -->
   <section>
     <h2>Serial / COM Port</h2>
 
@@ -107,19 +132,37 @@
     <div class="field">
       <label for="baud">Baud Rate</label>
       <input id="baud" value="9600">
-      <small>Common values: 9600, 19200, 115200</small>
+      <small>Common: 9600, 19200, 115200</small>
     </div>
 
     <div class="field">
-      <label for="serCmd">Command</label>
-      <input id="serCmd" value="*IDN?">
-      <small>Depends on the connected serial device</small>
+      <label for="serCmdSelect">Command</label>
+      <select id="serCmdSelect" onchange="syncCommand('ser')">
+        <option value="*IDN?">*IDN? — identify instrument</option>
+        <option value=":MEAS:VOLT?">:MEAS:VOLT? — read voltage</option>
+        <option value=":MEAS:CURR?">:MEAS:CURR? — read current</option>
+        <option value=":FREQ:CENT?">:FREQ:CENT? — get centre frequency</option>
+        <option value=":FREQ:CENT 1000000000">:FREQ:CENT 1000000000 — set centre frequency</option>
+        <option value=":FREQ:SPAN?">:FREQ:SPAN? — get span</option>
+        <option value=":FREQ:SPAN 50000000">:FREQ:SPAN 50000000 — set span</option>
+        <option value=":INIT">:INIT — start sweep/acquisition</option>
+        <option value=":TRAC:DATA?">:TRAC:DATA? — get fake trace data</option>
+        <option value=":SYST:ERR?">:SYST:ERR? — read error queue</option>
+        <option value="TEXT">TEXT — type custom command</option>
+      </select>
+      <small>Select known command or choose TEXT</small>
+    </div>
+
+    <div class="field">
+      <label for="serCmd">Command Text</label>
+      <input id="serCmd" class="command-input" value="*IDN?">
+      <small>Edit when dropdown is TEXT/custom</small>
     </div>
 
     <button onclick="serialQuery()">Send</button>
   </section>
 
-  <!-- VISA is an abstraction layer for lab instruments over TCP/IP, USB, serial, etc. -->
+  <!-- VISA: abstraction layer for TCP/IP, USB, serial and GPIB instruments -->
   <section>
     <h2>VISA</h2>
 
@@ -133,9 +176,27 @@
     </div>
 
     <div class="field">
-      <label for="visaCmd">SCPI Command</label>
-      <input id="visaCmd" value="*IDN?">
-      <small>Try *IDN? first</small>
+      <label for="visaCmdSelect">SCPI Command</label>
+      <select id="visaCmdSelect" onchange="syncCommand('visa')">
+        <option value="*IDN?">*IDN? — identify instrument</option>
+        <option value=":MEAS:VOLT?">:MEAS:VOLT? — read voltage</option>
+        <option value=":MEAS:CURR?">:MEAS:CURR? — read current</option>
+        <option value=":FREQ:CENT?">:FREQ:CENT? — get centre frequency</option>
+        <option value=":FREQ:CENT 1000000000">:FREQ:CENT 1000000000 — set centre frequency</option>
+        <option value=":FREQ:SPAN?">:FREQ:SPAN? — get span</option>
+        <option value=":FREQ:SPAN 50000000">:FREQ:SPAN 50000000 — set span</option>
+        <option value=":INIT">:INIT — start sweep/acquisition</option>
+        <option value=":TRAC:DATA?">:TRAC:DATA? — get fake trace data</option>
+        <option value=":SYST:ERR?">:SYST:ERR? — read error queue</option>
+        <option value="TEXT">TEXT — type custom command</option>
+      </select>
+      <small>Select known command or choose TEXT</small>
+    </div>
+
+    <div class="field">
+      <label for="visaCmd">Command Text</label>
+      <input id="visaCmd" class="command-input" value="*IDN?">
+      <small>Edit when dropdown is TEXT/custom</small>
     </div>
 
     <button onclick="visaQuery()">Send</button>
@@ -146,10 +207,23 @@
 
 <script>
 /*
-  Helper function:
-  Sends JSON to a backend FastAPI endpoint,
-  receives JSON back,
-  then prints response into the black output box.
+  Keep dropdown and command text box in sync.
+  If user selects a known command, copy it into text box.
+  If user selects TEXT, leave text box editable as-is.
+*/
+function syncCommand(prefix) {
+  const select = document.getElementById(prefix + "CmdSelect");
+  const input = document.getElementById(prefix + "Cmd");
+
+  if (select.value !== "TEXT") {
+    input.value = select.value;
+  }
+
+  input.focus();
+}
+
+/*
+  Shared JSON POST helper.
 */
 async function postJson(url, body) {
   const res = await fetch(url, {
@@ -163,12 +237,7 @@ async function postJson(url, body) {
 }
 
 /*
-  Ethernet SCPI query:
-  Uses host + port + command fields.
-  Example:
-    host = scpi-sim
-    port = 5025
-    command = *IDN?
+  Ethernet SCPI query.
 */
 function ethernetQuery() {
   postJson("/api/ethernet-scpi/query", {
@@ -179,12 +248,7 @@ function ethernetQuery() {
 }
 
 /*
-  Serial query:
-  Uses Linux device path, baud rate, and command.
-  Example:
-    port = /dev/ttyUSB0
-    baudrate = 9600
-    command = *IDN?
+  Serial query.
 */
 function serialQuery() {
   postJson("/api/serial/query", {
@@ -195,8 +259,7 @@ function serialQuery() {
 }
 
 /*
-  VISA resource listing:
-  Asks backend to scan visible VISA resources.
+  VISA resource listing.
 */
 async function listVisa() {
   const res = await fetch("/api/visa/resources");
@@ -205,11 +268,7 @@ async function listVisa() {
 }
 
 /*
-  VISA query:
-  Uses VISA resource string and command.
-  Example:
-    resource = TCPIP::scpi-sim::5025::SOCKET
-    command = *IDN?
+  VISA query.
 */
 function visaQuery() {
   postJson("/api/visa/query", {
